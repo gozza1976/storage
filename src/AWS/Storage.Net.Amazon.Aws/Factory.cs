@@ -39,6 +39,22 @@ namespace Storage.Net
       }
 
       /// <summary>
+      /// Creates an Amazon S3 storage using assumed role permissions (useful when running the code wform within ECS tasks or lambda where you don't need to provide and manage accessKeys and secrets as the permissions are assumed via the IAM role the lambda or ecs tasks has assigned to it)
+      /// All filtering is performed server side.
+      /// </summary>
+      /// <param name="factory"></param>
+      /// <param name="bucketName"></param>
+      /// <param name="region"></param>
+      /// <returns>A reference to the created storage</returns>
+      public static IBlobStorage AwsS3ServerSideFiltering(this IBlobStorageFactory factory,
+            string bucketName,
+            string region)
+      {
+         return new AwsBlobStorageServerSide(bucketName, region);
+      }
+
+
+      /// <summary>
       /// Creates an Amazon S3 storage
       /// </summary>
       /// <param name="factory">Factory reference</param>

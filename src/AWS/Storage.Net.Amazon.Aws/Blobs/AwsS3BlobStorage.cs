@@ -21,9 +21,9 @@ namespace Storage.Net.Amazon.Aws.Blobs
    /// </summary>
    class AwsS3BlobStorage : IBlobStorage, IAwsS3BlobStorage
    {
-      private const int ListChunkSize = 10;
-      private readonly string _bucketName;
-      private readonly AmazonS3Client _client;
+      protected const int ListChunkSize = 10;
+      protected readonly string _bucketName;
+      protected readonly AmazonS3Client _client;
       private readonly TransferUtility _fileTransferUtility;
       private bool _initialised = false;
 
@@ -99,7 +99,7 @@ namespace Storage.Net.Amazon.Aws.Blobs
          _fileTransferUtility = new TransferUtility(_client);
       }
 
-      private async Task<AmazonS3Client> GetClientAsync()
+      protected async Task<AmazonS3Client> GetClientAsync()
       {
          if(!_initialised)
          {
@@ -124,7 +124,7 @@ namespace Storage.Net.Amazon.Aws.Blobs
       /// <summary>
       /// Lists all buckets, optionaly filtering by prefix. Prefix filtering happens on client side.
       /// </summary>
-      public async Task<IReadOnlyCollection<Blob>> ListAsync(ListOptions options = null, CancellationToken cancellationToken = default)
+      virtual public async Task<IReadOnlyCollection<Blob>> ListAsync(ListOptions options = null, CancellationToken cancellationToken = default)
       {
          if(options == null)
             options = new ListOptions();

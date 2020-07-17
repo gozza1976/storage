@@ -11,32 +11,19 @@ using Storage.Net.Blobs;
 
 namespace Storage.Net.Amazon.Aws.Blobs
 {
-   class AwsS3DirectoryBrowser : IDisposable
+   class AwsS3DirectoryBrowserServerSide : AwsS3DirectoryBrowser
    {
       private readonly AmazonS3Client _client;
       private readonly string _bucketName;
       private readonly AsyncLimiter _limiter = new AsyncLimiter(10);
 
-      public AwsS3DirectoryBrowser(AmazonS3Client client, string bucketName)
+      public AwsS3DirectoryBrowserServerSide(AmazonS3Client client, string bucketName) : base(client, bucketName)
       {
          _client = client;
          _bucketName = bucketName;
       }
 
-       public virtual async Task<IReadOnlyCollection<Blob>> ListAsync(ListOptions options, CancellationToken cancellationToken)
-      {
-         var container = new List<Blob>();
-
-         await ListFolderAsync(container, options.FolderPath, options, cancellationToken).ConfigureAwait(false);
-
-         return options.MaxResults == null
-            ? container
-            : container.Count > options.MaxResults.Value
-               ? container.Take(options.MaxResults.Value).ToList()
-               : container;
-      }
-
-      internal virtual async Task ListFolderAsync(List<Blob> container, string path, ListOptions options, CancellationToken cancellationToken)
+      internal override async Task ListFolderAsync(List<Blob> container, string path, ListOptions options, CancellationToken cancellationToken)
       {
          var request = new ListObjectsV2Request()
          {
@@ -81,45 +68,5 @@ namespace Storage.Net.Amazon.Aws.Blobs
          }
       }
 
-
-      protected static string FormatFolderPrefix(string folderPath)
-      {
-         folderPath = StoragePath.Normalize(folderPath);
-
-         if(StoragePath.IsRootPath(folderPath))
-            return null;
-
-         if(!folderPath.EndsWith("/"))
-            folderPath += "/";
-
-         return folderPath;
-      }
-
-
-      public async Task DeleteRecursiveAsync(string fullPath, CancellationToken cancellationToken)
-      {
-         var request = new ListObjectsV2Request()
-         {
-            BucketName = _bucketName,
-            Prefix = fullPath + "/"
-         };
-
-         while(true)
-         {
-            ListObjectsV2Response response = await _client.ListObjectsV2Async(request, cancellationToken).ConfigureAwait(false);
-
-            await Task.WhenAll(response.S3Objects.Select(s3 => _client.DeleteObjectAsync(_bucketName, s3.Key, cancellationToken)));
-
-            if(response.NextContinuationToken == null)
-               break;
-
-            request.ContinuationToken = response.NextContinuationToken;
-         }
-      }
-
-      public void Dispose()
-      {
-         _limiter.Dispose();
-      }
    }
 }
