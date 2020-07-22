@@ -45,13 +45,6 @@ namespace Storage.Net.Amazon.Aws.Blobs
             Delimiter = "/"   //this tells S3 not to go into the folder recursively
          };
 
-         // if we have provided a file prefix, then append it on.
-         // as S3 can perform the filtering at source
-         if (!string.IsNullOrEmpty(options.FilePrefix))
-         {
-            request.Prefix += options.FilePrefix;
-         }
-
          var folderContainer = new List<Blob>();
 
          while(options.MaxResults == null || (container.Count < options.MaxResults))
